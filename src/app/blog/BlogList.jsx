@@ -1,0 +1,166 @@
+"use client";
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useBlog } from "@/contextapi/BlogContext";
+import Pagination from "@/components/Pagination";
+import Breadcrumb from "@/components/Breadcrumb";
+const formatDate = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  return `${d.getDate().toString().padStart(2, "0")}-${(d.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}-${d.getFullYear()}`;
+};
+
+export default function BlogList() {
+  const { blogs, loading, error, page, total, limit, fetchBlogs } = useBlog();
+
+  const handlePageChange = (pageNum) => {
+    fetchBlogs(pageNum);
+
+    const section = document.getElementById("blog-section");
+    if (section) {
+      const yOffset = -80;
+      const y =
+        section.getBoundingClientRect().top +
+        window.pageYOffset +
+        yOffset;
+
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
+
+  return (
+    <section
+      id="blog-section"
+      className="px-4 sm:px-6 lg:px-0 max-w-7xl mx-auto py-16 
+      bg-[#0f0a1f] text-white"
+    >
+<div className="mb-6">
+   <Breadcrumb />
+  </div>
+      {/* HEADING */}
+      <div className=" mb-14">
+        <h1 className="text-3xl md:text-4xl font-bold">
+          Latest Insights &{" "}
+          <span className="bg-gradient-to-r from-[#5B23FF] to-[#cbb7ff] bg-clip-text text-transparent">
+            Investment Updates
+          </span>
+        </h1>
+
+        <p className="text-gray-400 mt-4 max-w-2xl">
+          Stay updated with expert insights, investment strategies, and
+          property market trends to grow your portfolio smarter.
+        </p>
+
+        <div className="w-20 h-1 bg-[#5B23FF] mt-6 rounded-full"></div>
+      </div>
+
+      {/* LOADING */}
+      {loading && (
+        <div className="flex justify-center py-20">
+          <div className="relative w-14 h-14">
+            <div className="absolute inset-0 rounded-full border-4 border-[#5B23FF]/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#5B23FF] animate-spin"></div>
+          </div>
+        </div>
+      )}
+
+      {/* ERROR */}
+      {error && !loading && (
+        <div className="text-center py-16 text-red-400">{error}</div>
+      )}
+
+      {/* BLOG GRID */}
+      {!loading && !error && Array.isArray(blogs) && blogs.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+
+            {blogs.map((post, index) => (
+              <Link
+                href={`/blog/${post?.Slug || post?.slug || ""}`}
+                key={post?._id || index}
+                className="group rounded-3xl overflow-hidden 
+                bg-white/5 backdrop-blur-xl border border-white/10
+                hover:border-[#5B23FF]/50 transition duration-500 shadow-xl hover:-translate-y-1"
+              >
+
+                {/* IMAGE */}
+                <div className="overflow-hidden relative h-56">
+                  <Image
+                    src={
+                      post?.HeroImg?.url ||
+                      post?.heroImg?.url ||
+                      post?.image ||
+                      "/fallback.jpg"
+                    }
+                    unoptimized
+                    alt={post?.HeroAltText || post?.alt || "blog image"}
+                    fill
+                    className="object-cover group-hover:scale-110 transition duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                </div>
+
+                {/* CONTENT */}
+                <div className="p-6">
+
+                  <span className="inline-block text-xs font-semibold 
+                  bg-[#5B23FF]/20 text-[#cbb7ff] px-3 py-1 rounded-full mb-3 border border-[#5B23FF]/30">
+                    {post?.Category || post?.category || "General"}
+                  </span>
+
+                  <h2 className="text-lg font-semibold leading-snug mb-3 group-hover:text-[#5B23FF] transition">
+                    {post?.Title || post?.title || "No Title"}
+                  </h2>
+
+                  <p className="text-sm text-gray-400">
+                    {formatDate(post?.Date || post?.date)}
+                  </p>
+
+                </div>
+
+              </Link>
+            ))}
+
+          </div>
+
+          {/* PAGINATION */}
+          <div className="mt-12">
+            <Pagination
+              totalItems={total}
+              itemsPerPage={limit}
+              currentPage={page}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </>
+      )}
+
+      {/* EMPTY */}
+      {!loading && !error && Array.isArray(blogs) && blogs.length === 0 && (
+        <div className="flex flex-col items-center justify-center text-center py-20">
+
+          <h2 className="text-2xl md:text-3xl font-bold text-white">
+            Blogs Coming Soon 🚀
+          </h2>
+
+          <p className="text-gray-400 mt-3 max-w-md">
+            We are working on some amazing investment insights.
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 px-6 py-2 rounded-lg 
+            bg-gradient-to-r from-[#5B23FF] to-[#7a4dff] text-white hover:opacity-90 transition"
+          >
+            Refresh
+          </button>
+
+        </div>
+      )}
+
+    </section>
+  );
+}
